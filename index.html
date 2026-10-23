@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0d12">
+  <meta name="description" content="ClockOut is a free, simple work logout time calculator. Enter your login time and working duration to calculate when you're done.">
+  <title>ClockOut — Know when you're done</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d12;
+      --panel: #121620;
+      --panel-2: #171c28;
+      --line: rgba(255,255,255,.09);
+      --muted: #9ba5b7;
+      --text: #f5f7fb;
+      --accent: #b7ff65;
+      --accent-ink: #11170b;
+      --blue: #90aaff;
+      --danger: #ffb4b4;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--text);
+      background: radial-gradient(ellipse at 50% -20%, rgba(144,170,255,.14), transparent 50%), var(--bg);
+      display: flex; flex-direction: column;
+    }
+    header, main, footer { width: min(100% - 32px, 1040px); margin-inline: auto; }
+    header { display:flex; justify-content:space-between; align-items:center; padding: 25px 0; }
+    .brand { display:flex; gap:11px; align-items:center; font-weight:800; letter-spacing:-.045em; font-size:1.25rem; }
+    .brand-mark { width:34px; height:34px; display:grid; place-items:center; border-radius:11px; color:var(--accent-ink); background:var(--accent); font-size:1.05rem; }
+    .badge { border:1px solid var(--line); color:var(--muted); border-radius:999px; padding:7px 11px; font-size:.76rem; }
+    main { flex:1; padding: 35px 0 62px; }
+    .hero { text-align:center; max-width:700px; margin: 0 auto 34px; }
+    .eyebrow { text-transform:uppercase; letter-spacing:.17em; color:var(--accent); font-size:.72rem; font-weight:800; }
+    h1 { margin:13px 0 12px; font-size:clamp(2.5rem, 8vw, 5.1rem); line-height:.98; letter-spacing:-.075em; }
+    h1 span { color:var(--accent); }
+    .hero p { color:var(--muted); margin:0 auto; max-width:520px; font-size:1.02rem; line-height:1.7; }
+    .layout { display:grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap:18px; align-items:stretch; }
+    .card { background:linear-gradient(145deg, rgba(255,255,255,.035), transparent 55%), var(--panel); border:1px solid var(--line); border-radius:24px; padding:clamp(20px, 4vw, 30px); box-shadow:0 18px 60px rgba(0,0,0,.15); }
+    .card h2 { font-size:1.02rem; margin:0 0 23px; letter-spacing:-.025em; }
+    label, .field-label { display:block; color:#dce1eb; font-size:.85rem; font-weight:650; margin-bottom:9px; }
+    .field { margin-bottom:22px; }
+    .time-row { display:grid; grid-template-columns:1fr 1fr 96px; gap:8px; }
+    input, select, button { font:inherit; }
+    input, select { min-width:0; width:100%; border:1px solid var(--line); background:var(--panel-2); color:var(--text); padding:14px 12px; border-radius:12px; outline:none; }
+    input:focus, select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(183,255,101,.1); }
+    .duration-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .hint { color:var(--muted); font-size:.76rem; line-height:1.5; margin-top:8px; }
+    .presets { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+    .chip { border:1px solid var(--line); border-radius:999px; color:var(--muted); background:transparent; padding:7px 11px; cursor:pointer; font-size:.78rem; }
+    .chip:hover, .chip:focus-visible { color:var(--text); border-color:var(--accent); }
+    .primary { width:100%; padding:15px 18px; background:var(--accent); color:var(--accent-ink); border:0; border-radius:13px; font-weight:850; cursor:pointer; transition:transform .15s ease, filter .15s ease; }
+    .primary:hover { filter:brightness(1.06); transform:translateY(-1px); }
+    .result-card { display:flex; flex-direction:column; justify-content:space-between; min-height:100%; }
+    .result-top { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .live-dot { display:inline-block; width:7px; height:7px; background:var(--accent); border-radius:50%; margin-right:7px; box-shadow:0 0 12px rgba(183,255,101,.5); }
+    .result-label { color:var(--muted); font-size:.85rem; }
+    .result-time { font-size:clamp(3.2rem, 8vw, 5.2rem); line-height:1.05; letter-spacing:-.07em; font-weight:850; margin:25px 0 8px; overflow-wrap:anywhere; }
+    .result-24 { color:var(--accent); font-weight:750; font-size:1rem; }
+    .result-divider { height:1px; background:var(--line); margin:28px 0 20px; }
+    .stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .stat { background:rgba(255,255,255,.025); border:1px solid var(--line); border-radius:14px; padding:14px; }
+    .stat span { display:block; color:var(--muted); font-size:.76rem; margin-bottom:7px; }
+    .stat strong { font-size:1rem; font-weight:750; }
+    .next-day { display:none; color:var(--blue); font-size:.82rem; margin-top:12px; }
+    .result-actions { display:flex; gap:9px; margin-top:20px; }
+    .secondary { flex:1; border:1px solid var(--line); color:var(--text); background:transparent; padding:12px; border-radius:12px; cursor:pointer; font-weight:650; }
+    .secondary:hover { border-color:rgba(255,255,255,.28); }
+    .message { color:var(--danger); font-size:.82rem; min-height:1.2em; margin-top:10px; }
+    .note { color:var(--muted); text-align:center; max-width:670px; margin:26px auto 0; font-size:.78rem; line-height:1.65; }
+    footer { border-top:1px solid var(--line); display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:20px 0 25px; color:var(--muted); font-size:.77rem; }
+    footer strong { color:var(--text); }
+    @media (max-width:720px) {
+      header { padding:19px 0; }
+      main { padding:25px 0 42px; }
+      .hero { margin-bottom:25px; }
+      .layout { grid-template-columns:1fr; }
+      .result-card { min-height:360px; }
+      .result-time { font-size:clamp(3.5rem, 17vw, 5rem); }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition:none !important; scroll-behavior:auto !important; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="brand-mark">↗</span><span>ClockOut</span></div>
+    <span class="badge">FREE TOOL · NO SIGN-UP</span>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="eyebrow">Your workday, simplified</div>
+      <h1>Know when<br>you're <span>done.</span></h1>
+      <p>Enter your login time and required working duration. Get your expected logout time instantly — without doing the maths in your head.</p>
+    </section>
+
+    <section class="layout" aria-label="Logout time calculator">
+      <form class="card" id="calculator">
+        <h2>Set up your workday</h2>
+        <div class="field">
+          <label for="loginHour">When did you log in?</label>
+          <div class="time-row">
+            <input id="loginHour" type="number" min="1" max="12" value="10" inputmode="numeric" aria-label="Login hour">
+            <input id="loginMinute" type="number" min="0" max="59" value="30" inputmode="numeric" aria-label="Login minute">
+            <select id="loginPeriod" aria-label="Login AM or PM"><option>AM</option><option>PM</option></select>
+          </div>
+          <div class="hint">Enter the time shown by your attendance system or choose AM/PM.</div>
+        </div>
+
+        <div class="field">
+          <span class="field-label">Required working duration</span>
+          <div class="duration-row">
+            <div><label for="workHours">Hours</label><input id="workHours" type="number" min="0" max="47" value="8" inputmode="numeric"></div>
+            <div><label for="workMinutes">Minutes</label><input id="workMinutes" type="number" min="0" max="59" value="30" inputmode="numeric"></div>
+          </div>
+          <div class="presets" aria-label="Duration presets">
+            <button class="chip" type="button" data-hours="8" data-minutes="0">8 hours</button>
+            <button class="chip" type="button" data-hours="8" data-minutes="30">8h 30m</button>
+            <button class="chip" type="button" data-hours="9" data-minutes="0">9 hours</button>
+          </div>
+        </div>
+        <button class="primary" type="submit">Calculate logout time ↗</button>
+        <div class="message" id="error" role="alert"></div>
+      </form>
+
+      <section class="card result-card" aria-live="polite" aria-atomic="true">
+        <div>
+          <div class="result-top">
+            <div class="result-label"><span class="live-dot"></span>YOUR EXPECTED LOGOUT</div>
+            <span class="badge">CALCULATED</span>
+          </div>
+          <div class="result-time" id="result12">7:00 PM</div>
+          <div class="result-24" id="result24">24-hour format · 19:00</div>
+          <div class="next-day" id="nextDay">Your logout time falls on the next day.</div>
+          <div class="result-divider"></div>
+          <div class="stats">
+            <div class="stat"><span>Login time</span><strong id="summaryLogin">10:30 AM</strong></div>
+            <div class="stat"><span>Required duration</span><strong id="summaryDuration">8h 30m</strong></div>
+          </div>
+        </div>
+        <div class="result-actions">
+          <button class="secondary" type="button" id="copyBtn">Copy result</button>
+          <button class="secondary" type="button" id="resetBtn">Reset</button>
+        </div>
+      </section>
+    </section>
+
+    <p class="note">ClockOut calculates the time between login and logout using the duration you enter. It does not add break time. Confirm your workplace's attendance policy for official requirements. Your entries are calculated in this browser and are not sent to a server.</p>
+  </main>
+
+  <footer>
+    <span><strong>ClockOut</strong> · Know when you're done.</span>
+    <span>Free to use · Made for simpler workdays</span>
+  </footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const form = $('calculator');
+  let lastResult = '';
+
+  function toMinutes(hour, minute, period) {
+    let h = hour % 12;
+    if (period === 'PM') h += 12;
+    return h * 60 + minute;
+  }
+  function format12(total) {
+    const dayMinute = ((total % 1440) + 1440) % 1440;
+    const h24 = Math.floor(dayMinute / 60);
+    const m = dayMinute % 60;
+    const period = h24 >= 12 ? 'PM' : 'AM';
+    const h12 = h24 % 12 || 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+  }
+  function format24(total) {
+    const dayMinute = ((total % 1440) + 1440) % 1440;
+    return `${String(Math.floor(dayMinute / 60)).padStart(2, '0')}:${String(dayMinute % 60).padStart(2, '0')}`;
+  }
+  function calculate(showError = true) {
+    const hour = Number($('loginHour').value);
+    const minute = Number($('loginMinute').value);
+    const period = $('loginPeriod').value;
+    const hours = Number($('workHours').value);
+    const minutes = Number($('workMinutes').value);
+    const error = $('error');
+    error.textContent = '';
+
+    if (!$('loginHour').value || !$('loginMinute').value || $('workHours').value === '' || $('workMinutes').value === '' ||
+        !Number.isInteger(hour) || hour < 1 || hour > 12 ||
+        !Number.isInteger(minute) || minute < 0 || minute > 59 ||
+        !Number.isInteger(hours) || hours < 0 || hours > 47 ||
+        !Number.isInteger(minutes) || minutes < 0 || minutes > 59 ||
+        (hours === 0 && minutes === 0)) {
+      if (showError) error.textContent = 'Enter a valid login time and a duration greater than zero.';
+      return false;
+    }
+
+    const start = toMinutes(hour, minute, period);
+    const duration = hours * 60 + minutes;
+    const end = start + duration;
+    $('result12').textContent = format12(end);
+    $('result24').textContent = `24-hour format · ${format24(end)}`;
+    $('summaryLogin').textContent = format12(start);
+    $('summaryDuration').textContent = `${hours}h ${String(minutes).padStart(2, '0')}m`;
+    $('nextDay').style.display = end >= 1440 ? 'block' : 'none';
+    lastResult = `ClockOut result\nLogin: ${format12(start)}\nRequired duration: ${hours}h ${minutes}m\nExpected logout: ${format12(end)} (${format24(end)} in 24-hour format)${end >= 1440 ? '\nLogout falls on the next day.' : ''}`;
+    return true;
+  }
+
+  form.addEventListener('submit', event => { event.preventDefault(); calculate(true); });
+  ['loginHour','loginMinute','loginPeriod','workHours','workMinutes'].forEach(id => {
+    $(id).addEventListener('input', () => calculate(false));
+    $(id).addEventListener('change', () => calculate(false));
+  });
+  document.querySelectorAll('[data-hours]').forEach(btn => btn.addEventListener('click', () => {
+    $('workHours').value = btn.dataset.hours;
+    $('workMinutes').value = btn.dataset.minutes;
+    calculate(false);
+  }));
+  $('copyBtn').addEventListener('click', async () => {
+    if (!lastResult && !calculate(false)) return;
+    const btn = $('copyBtn');
+    try {
+      await navigator.clipboard.writeText(lastResult);
+      btn.textContent = 'Copied ✓';
+    } catch {
+      const area = document.createElement('textarea');
+      area.value = lastResult;
+      document.body.appendChild(area); area.select();
+      const ok = document.execCommand('copy'); area.remove();
+      btn.textContent = ok ? 'Copied ✓' : 'Select and copy';
+    }
+    setTimeout(() => btn.textContent = 'Copy result', 1600);
+  });
+  $('resetBtn').addEventListener('click', () => {
+    $('loginHour').value = 10; $('loginMinute').value = 30; $('loginPeriod').value = 'AM';
+    $('workHours').value = 8; $('workMinutes').value = 30;
+    calculate(false);
+  });
+  calculate(false);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "ClockOut — Know when you're done",
+  "short_name": "ClockOut",
+  "description": "A free logout time calculator.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0b0d12",
+  "theme_color": "#0b0d12",
+  "icons": []
+}
